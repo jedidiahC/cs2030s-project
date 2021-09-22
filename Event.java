@@ -14,4 +14,8 @@ abstract class Event {
     double getTime() {
         return this.time;
     }
+
+    boolean hasFollowupEvent() {
+        return true;
+    }
 }

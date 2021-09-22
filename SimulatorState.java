@@ -1,13 +1,35 @@
 package cs2030.simulator; 
 
-class SimulatorState {
-    private final Server[] servers;
+import java.util.ArrayList;
 
-    SimulatorState(Server[] servers) {
+class SimulatorState {
+    private final ArrayList<Server> servers;
+
+    SimulatorState(ArrayList<Server> servers) {
         this.servers = servers;
     }
 
-    Server[] getServers() {
-        return servers;
+    ArrayList<Server> getServers() {
+        return this.servers;
+    }
+
+    SimulatorState updateServer(Server server) {
+        for (int serverIndex = 0; serverIndex < this.servers.size(); serverIndex++) {
+            if (this.servers.get(serverIndex).getServerId() == server.getServerId()) {
+                this.servers.set(serverIndex, server);
+            }
+        }
+
+        return new SimulatorState(this.servers);
+    }
+
+    Server getUpdatedServer(Server oldServer) {
+        for (Server server : this.servers) {
+            if (server.getServerId() == oldServer.getServerId()) {
+                return server;
+            }
+        }
+        
+        return oldServer;
     }
 }

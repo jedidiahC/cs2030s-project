@@ -8,4 +8,17 @@ class Customer {
         this.customerId = customerId;
         this.serviceTime = serviceTime;
     }
+
+    int getCustomerId() {
+        return this.customerId;
+    }
+    
+    double getServiceTime() {
+        return this.serviceTime;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%d", this.customerId);
+    }
 }

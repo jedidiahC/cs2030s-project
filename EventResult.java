@@ -10,7 +10,7 @@ class EventResult {
     }
 
     Event getFollowup() {
-       return followupEvent; 
+        return followupEvent; 
     }
 
     SimulatorState getSimulatorState() {
