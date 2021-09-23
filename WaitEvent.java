@@ -15,6 +15,7 @@ class WaitEvent extends Event {
         Server server = simulatorState
             .getUpdatedServer(this.server)
             .queueCustomer(customer.getCustomerId()); 
+
         Event followupEvent = new ServeEvent(server.getNextServeTime(), this.customer, server);
 
         simulatorState = simulatorState.updateServer(server);

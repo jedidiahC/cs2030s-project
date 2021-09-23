@@ -37,7 +37,7 @@ public class Simulator {
     private void initNewArrivalEvents(List<Double> arrivalTimes, PriorityQueue<Event> eventPq) {
         int customerId = 1; 
         for (Double arrivalTime: arrivalTimes) {
-            eventPq.add(new ArrivalEvent(arrivalTime, new Customer(++customerId, SERVICE_TIME)));
+            eventPq.add(new ArrivalEvent(arrivalTime, new Customer(customerId++, SERVICE_TIME)));
         }
     }
 }

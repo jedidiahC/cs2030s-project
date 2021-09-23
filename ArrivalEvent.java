@@ -3,6 +3,7 @@ package cs2030.simulator;
 import java.util.ArrayList;
 
 class ArrivalEvent extends Event { 
+    private static final int EVENT_PRIORITY = 3;
     private final Customer customer;
 
     ArrivalEvent(double time, Customer customer) {
@@ -19,7 +20,11 @@ class ArrivalEvent extends Event {
             if (server.canServe(this.customer.getCustomerId())) {
                 followupEvent = new ServeEvent(this.getTime(), this.customer, server);
                 return new EventResult(followupEvent, simulatorState);
-            } else if (server.canQueue()) {
+            }
+        }
+
+        for (Server server : servers) {
+            if (server.canQueue()) {
                 followupEvent = new WaitEvent(this.getTime(), this.customer, server);
                 return new EventResult(followupEvent, simulatorState);
             } 
@@ -32,6 +37,11 @@ class ArrivalEvent extends Event {
     @Override
     public String toString() {
         return String.format("%.3f %s arrives", getTime(), customer);
+    }
+
+    @Override
+    int getEventPriority() {
+        return EVENT_PRIORITY;
     }
 }
 

@@ -25,4 +25,9 @@ class ServeEvent extends Event {
     public String toString() {
         return String.format("%.3f %s serves by server %s", getTime(), customer, server);
     }
+
+    @Override
+    int getEventPriority() {
+        return 2;
+    }
 }

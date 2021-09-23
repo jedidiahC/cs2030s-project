@@ -44,7 +44,7 @@ class Server {
 
     Server completeService(int customer) {
         if (customer == this.customerServed) {
-            return new Server(this.serverId, this.customerInQueue, this.customerServed, 0);
+            return new Server(this.serverId, this.customerInQueue, NO_CUSTOMER_ID, 0);
         } 
 
         return this;

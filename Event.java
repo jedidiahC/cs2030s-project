@@ -18,4 +18,8 @@ abstract class Event {
     boolean hasFollowupEvent() {
         return true;
     }
+
+    int getEventPriority() {
+        return 1;
+    }
 }
