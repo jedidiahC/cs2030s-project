@@ -5,7 +5,9 @@ abstract class Event {
 
     public abstract String toString();
 
-    abstract EventResult process(SimulatorState simulatorState);
+    abstract SimulatorState process(SimulatorState simulatorState);
+    
+    abstract Event nextEvent(SimulatorState simulatorState);
 
     public Event(double time) {
         this.time = time;
@@ -15,11 +17,15 @@ abstract class Event {
         return this.time;
     }
 
-    boolean hasFollowupEvent() {
+    boolean hasNextEvent() {
         return true;
     }
 
     int getEventPriority() {
         return 1;
+    }
+
+    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+        return stats;
     }
 }

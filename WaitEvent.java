@@ -11,16 +11,27 @@ class WaitEvent extends Event {
     }
     
     @Override
-    public EventResult process(SimulatorState simulatorState) {
+    SimulatorState process(SimulatorState simulatorState) {
         Server server = simulatorState
             .getUpdatedServer(this.server)
             .queueCustomer(customer.getCustomerId()); 
 
-        Event followupEvent = new ServeEvent(server.getNextServeTime(), this.customer, server);
+        return simulatorState.updateServer(server);
+    }
 
-        simulatorState = simulatorState.updateServer(server);
+    @Override 
+    Event nextEvent(SimulatorState simulatorState) {
+        Server server = simulatorState
+            .getUpdatedServer(this.server)
+            .queueCustomer(customer.getCustomerId()); 
 
-        return new EventResult(followupEvent, simulatorState);
+        return new ServeEvent(server.getNextServeTime(), this.customer, server);
+    }
+
+    @Override
+    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+        Server server = state.getUpdatedServer(this.server);
+        return stats.trackWaitingTime(server.getNextServeTime() - this.getTime());        
     }
 
     @Override

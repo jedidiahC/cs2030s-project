@@ -1,4 +1,3 @@
-
 package cs2030.simulator;
 
 class DoneEvent extends Event { 
@@ -12,13 +11,17 @@ class DoneEvent extends Event {
     }
     
     @Override
-    public EventResult process(SimulatorState simulatorState) {
+    SimulatorState process(SimulatorState simulatorState) {
         Server updatedServer = simulatorState
             .getUpdatedServer(this.server)
             .completeService(this.customer.getCustomerId());
-        simulatorState = simulatorState.updateServer(updatedServer);
 
-        return new EventResult(this, simulatorState);
+        return simulatorState.updateServer(updatedServer);
+    }
+
+    @Override
+    Event nextEvent(SimulatorState state) {
+        return this;
     }
 
     @Override
@@ -27,7 +30,7 @@ class DoneEvent extends Event {
     }
 
     @Override
-    boolean hasFollowupEvent() {
+    boolean hasNextEvent() {
         return false;
     }
 }

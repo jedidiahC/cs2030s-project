@@ -10,8 +10,18 @@ class LeaveEvent extends Event {
     }
     
     @Override
-    public EventResult process(SimulatorState simulatorState) {
-        return new EventResult(this, simulatorState);
+    SimulatorState process(SimulatorState simulatorState) {
+        return simulatorState;
+    }
+    
+    @Override
+    Event nextEvent(SimulatorState simulatorState) {
+        return this;
+    }
+
+    @Override
+    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+        return stats.trackCustomerLeft();        
     }
 
     @Override
@@ -20,7 +30,7 @@ class LeaveEvent extends Event {
     }
 
     @Override
-    boolean hasFollowupEvent() {
+    boolean hasNextEvent() {
         return false;
     }
 }

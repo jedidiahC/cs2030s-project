@@ -11,19 +11,31 @@ class ServeEvent extends Event {
     }
     
     @Override
-    public EventResult process(SimulatorState simulatorState) {
-        double completionTime = this.getTime() + customer.getServiceTime();
+    SimulatorState process(SimulatorState simulatorState) {
+        Server server = simulatorState
+            .getUpdatedServer(this.server)
+            .serveCustomer(this.customer.getCustomerId(), getCompletionTime());
 
-        Server server = this.server.serveCustomer(this.customer.getCustomerId(), completionTime);
-        simulatorState = simulatorState.updateServer(server);
-        Event followupEvent = new DoneEvent(completionTime, this.customer, this.server);
+        return simulatorState.updateServer(server);
+    }
 
-        return new EventResult(followupEvent, simulatorState);
+    @Override
+    Event nextEvent(SimulatorState simulatorState) {
+        return new DoneEvent(getCompletionTime(), this.customer, this.server);
+    }
+
+    double getCompletionTime() {
+        return this.getTime() + this.customer.getServiceTime();
     }
 
     @Override
     public String toString() {
         return String.format("%.3f %s serves by server %s", getTime(), customer, server);
+    }
+
+    @Override
+    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+        return stats.trackCustomerServed();        
     }
 
     @Override

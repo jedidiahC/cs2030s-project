@@ -12,26 +12,27 @@ class ArrivalEvent extends Event {
     }
     
     @Override
-    EventResult process(SimulatorState simulatorState) {
+    SimulatorState process(SimulatorState simulatorState) {
+        return simulatorState;
+    }
+
+    @Override 
+    Event nextEvent(SimulatorState simulatorState) {
         ArrayList<Server> servers = simulatorState.getServers();
-        Event followupEvent; 
 
         for (Server server : servers) {
             if (server.canServe(this.customer.getCustomerId())) {
-                followupEvent = new ServeEvent(this.getTime(), this.customer, server);
-                return new EventResult(followupEvent, simulatorState);
+                return new ServeEvent(this.getTime(), this.customer, server);
             }
         }
 
         for (Server server : servers) {
             if (server.canQueue()) {
-                followupEvent = new WaitEvent(this.getTime(), this.customer, server);
-                return new EventResult(followupEvent, simulatorState);
+                return new WaitEvent(this.getTime(), this.customer, server);
             } 
         }
 
-        followupEvent = new LeaveEvent(this.getTime(), this.customer);
-        return new EventResult(followupEvent, simulatorState);
+        return new LeaveEvent(this.getTime(), this.customer);
     }
 
     @Override

@@ -8,6 +8,9 @@ import java.util.Comparator;
 public class Simulator {
     private static final double SERVICE_TIME = 1.0f;
 
+    /**
+     * Simulates a multi-server system.
+     */
     public void simulate(List<Double> arrivalTimes, int numOfServers) {
         Comparator<Event> comparator = new EventTimeComparator();
         PriorityQueue<Event> eventPq = new PriorityQueue<Event>(arrivalTimes.size(), comparator);
@@ -19,19 +22,23 @@ public class Simulator {
         for (int i = 1; i <= numOfServers; i++) {
             servers.add(new Server(i));
         }
-        SimulatorState currSimulatorState = new SimulatorState(servers);
+
+        SimulatorState state = new SimulatorState(servers);
+        SimulatorStats stats = new SimulatorStats();
 
         while (!eventPq.isEmpty()) {
             Event event = eventPq.poll();    
             System.out.println(event);
 
-            EventResult eventResult = event.process(currSimulatorState);
-            currSimulatorState = eventResult.getSimulatorState();
+            if (event.hasNextEvent()) {
+                eventPq.add(event.nextEvent(state));
+            } 
 
-            if (event.hasFollowupEvent()) {
-                eventPq.add(eventResult.getFollowup());
-            }
+            stats = event.updateSimulatorStats(state, stats);
+            state = event.process(state);
         }
+        
+        System.out.println(stats);
     }
 
     private void initNewArrivalEvents(List<Double> arrivalTimes, PriorityQueue<Event> eventPq) {
