@@ -20,7 +20,7 @@ class LeaveEvent extends Event {
     }
 
     @Override
-    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
         return stats.trackCustomerLeft();        
     }
 

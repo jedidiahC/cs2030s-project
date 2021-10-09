@@ -20,26 +20,22 @@ class SimulatorStats {
     }
 
     SimulatorStats trackWaitingTime(double waitingTime) {
-        return new SimulatorStats(
-                this.totalWaitingTime + waitingTime, 
-                this.numOfCustomersServed, 
-                this.numOfCustomersLeft
-                ); 
+        return updateStats(0, 0, waitingTime);
     }
 
     SimulatorStats trackCustomerServed() {
-        return new SimulatorStats(
-                this.totalWaitingTime, 
-                this.numOfCustomersServed + 1, 
-                this.numOfCustomersLeft
-                ); 
+        return updateStats(1, 0, 0);
     }
 
     SimulatorStats trackCustomerLeft() {
+        return updateStats(0, 1, 0);
+    }
+
+    private SimulatorStats updateStats(int servedDelta, int leftDelta, double waitingTimeDelta) {
         return new SimulatorStats(
-                this.totalWaitingTime, 
-                this.numOfCustomersServed, 
-                this.numOfCustomersLeft + 1
+                this.totalWaitingTime + waitingTimeDelta, 
+                this.numOfCustomersServed + servedDelta, 
+                this.numOfCustomersLeft + leftDelta
                 ); 
     }
 

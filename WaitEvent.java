@@ -29,7 +29,7 @@ class WaitEvent extends Event {
     }
 
     @Override
-    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
         Server server = state.getUpdatedServer(this.server);
         return stats.trackWaitingTime(server.getNextServeTime() - this.getTime());        
     }

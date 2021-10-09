@@ -1,6 +1,7 @@
 package cs2030.simulator;
 
 class ServeEvent extends Event { 
+    private static final int EVENT_PRIORITY = 2;
     private final Customer customer;
     private final Server server;
 
@@ -9,7 +10,7 @@ class ServeEvent extends Event {
         this.customer = customer;
         this.server = server;
     }
-    
+
     @Override
     SimulatorState process(SimulatorState simulatorState) {
         Server server = simulatorState
@@ -34,12 +35,12 @@ class ServeEvent extends Event {
     }
 
     @Override
-    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
         return stats.trackCustomerServed();        
     }
 
     @Override
     int getEventPriority() {
-        return 2;
+        return EVENT_PRIORITY;
     }
 }

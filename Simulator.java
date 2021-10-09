@@ -34,7 +34,7 @@ public class Simulator {
                 eventPq.add(event.nextEvent(state));
             } 
 
-            stats = event.updateSimulatorStats(state, stats);
+            stats = event.updateStats(state, stats);
             state = event.process(state);
         }
         

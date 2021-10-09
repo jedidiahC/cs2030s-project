@@ -1,6 +1,8 @@
 package cs2030.simulator;
 
 abstract class Event { 
+    private static final int DEFAULT_EVENT_PRIORITY = 1;
+
     private final double time;
 
     public abstract String toString();
@@ -22,10 +24,10 @@ abstract class Event {
     }
 
     int getEventPriority() {
-        return 1;
+        return DEFAULT_EVENT_PRIORITY;
     }
 
-    SimulatorStats updateSimulatorStats(SimulatorState state, SimulatorStats stats) {
+    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
         return stats;
     }
 }
