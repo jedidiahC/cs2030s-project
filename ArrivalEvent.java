@@ -2,42 +2,42 @@ package cs2030.simulator;
 
 import java.util.ArrayList;
 
-class ArrivalEvent extends Event { 
+class ArrivalEvent extends CustomerEvent { 
     private static final int EVENT_PRIORITY = 3;
-    private final Customer customer;
 
     ArrivalEvent(double time, Customer customer) {
-        super(time);
-        this.customer = customer;
+        super(time, customer);
     }
-    
-    @Override
-    SimulatorState process(SimulatorState simulatorState) {
-        return simulatorState;
+
+    @Override 
+    boolean hasNextEvent() {
+        return true;
     }
 
     @Override 
     Event nextEvent(SimulatorState simulatorState) {
-        ArrayList<Server> servers = simulatorState.getServers();
+        int serverId = simulatorState.assignServer(this.getCustomer());
 
-        for (Server server : servers) {
-            if (server.canServe(this.customer.getCustomerId())) {
-                return new ServeEvent(this.getTime(), this.customer, server);
-            }
+        if (!simulatorState.hasServer(serverId)) {
+            return new LeaveEvent(this.getTime(), this.getCustomer());
+        } 
+
+        Server server = simulatorState.getServer(serverId);  
+
+        if (server.canServe(this.getCustomer())) {
+            return new ServeEvent(this.getTime(), this.getCustomer(), serverId);
         }
 
-        for (Server server : servers) {
-            if (server.canQueue()) {
-                return new WaitEvent(this.getTime(), this.customer, server);
-            } 
-        }
+        if (server.canQueue(this.getCustomer())) {
+            return new WaitEvent(this.getTime(), this.getCustomer(), serverId);
+        } 
 
-        return new LeaveEvent(this.getTime(), this.customer);
+        return new LeaveEvent(this.getTime(), this.getCustomer());
     }
 
     @Override
     public String toString() {
-        return String.format("%.3f %s arrives", getTime(), customer);
+        return String.format("%s arrives", super.toString());
     }
 
     @Override

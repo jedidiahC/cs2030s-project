@@ -6,22 +6,24 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 public class Simulator {
-    private static final double SERVICE_TIME = 1.0f;
+    private static final double DEFAULT_SERVICE_TIME = 1.0f;
+    private static final int DEFAULT_SERVER_QUEUE_SIZE = 1;
 
     /**
      * Simulates a multi-server system.
      */
-    public void simulate(List<Double> arrivalTimes, int numOfServers) {
-        Comparator<Event> comparator = new EventTimeComparator();
-        PriorityQueue<Event> eventPq = new PriorityQueue<Event>(arrivalTimes.size(), comparator);
-    
-        initNewArrivalEvents(arrivalTimes, eventPq);
+    public void simulate(List<Double> arrivalTimes, 
+            List<Double> serviceTimes, 
+            int numOfServers, 
+            int queueSize) {
 
-        ArrayList<Server> servers = new ArrayList<Server>();
+        ArrayList<Server> servers = initServers(numOfServers, queueSize);
 
-        for (int i = 1; i <= numOfServers; i++) {
-            servers.add(new Server(i));
-        }
+        PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
+                arrivalTimes.size(), 
+                new EventTimeComparator());
+
+        initPq(arrivalTimes, serviceTimes, eventPq);
 
         SimulatorState state = new SimulatorState(servers);
         SimulatorStats stats = new SimulatorStats();
@@ -37,14 +39,40 @@ public class Simulator {
             stats = event.updateStats(state, stats);
             state = event.process(state);
         }
-        
+
         System.out.println(stats);
     }
 
-    private void initNewArrivalEvents(List<Double> arrivalTimes, PriorityQueue<Event> eventPq) {
-        int customerId = 1; 
-        for (Double arrivalTime: arrivalTimes) {
-            eventPq.add(new ArrivalEvent(arrivalTime, new Customer(customerId++, SERVICE_TIME)));
+    /**
+     * Simulates a multi-server system.
+     */
+    public void simulate(List<Double> arrivalTimes, int numOfServers) {
+        ArrayList<Double> serviceTimes = new ArrayList<Double>();
+        for (double arrivalTime : arrivalTimes) {
+            serviceTimes.add(DEFAULT_SERVICE_TIME);
+        }
+
+        simulate(arrivalTimes, serviceTimes, numOfServers, DEFAULT_SERVER_QUEUE_SIZE);
+    }
+
+    ArrayList<Server> initServers(int numOfServers, int queueSize) {
+        ArrayList<Server> servers = new ArrayList<Server>();
+
+        for (int i = 1; i <= numOfServers; i++) {
+            servers.add(new Server(i, queueSize));
+        }
+
+        return servers;
+    }
+
+    void initPq(List<Double> arrivalTimes, 
+            List<Double> serviceTimes, 
+            PriorityQueue<Event> eventPq) {
+        int customerId = 1;
+        for (int i = 0; i < arrivalTimes.size(); i++) {
+            eventPq.add(
+                    new ArrivalEvent(arrivalTimes.get(i), 
+                        new Customer(customerId++, serviceTimes.get(i), arrivalTimes.get(i))));
         }
     }
 }

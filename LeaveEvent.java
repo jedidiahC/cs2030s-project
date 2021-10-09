@@ -1,22 +1,9 @@
 
 package cs2030.simulator;
 
-class LeaveEvent extends Event { 
-    private final Customer customer;
-
+class LeaveEvent extends CustomerEvent { 
     LeaveEvent(double time, Customer customer) {
-        super(time);
-        this.customer = customer;
-    }
-    
-    @Override
-    SimulatorState process(SimulatorState simulatorState) {
-        return simulatorState;
-    }
-    
-    @Override
-    Event nextEvent(SimulatorState simulatorState) {
-        return this;
+        super(time, customer);
     }
 
     @Override
@@ -26,11 +13,6 @@ class LeaveEvent extends Event {
 
     @Override
     public String toString() {
-        return String.format("%.3f %s leaves", getTime(), customer);
-    }
-
-    @Override
-    boolean hasNextEvent() {
-        return false;
+        return String.format("%s leaves", super.toString());
     }
 }

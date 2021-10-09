@@ -1,77 +1,78 @@
 package cs2030.simulator;
 
+import java.util.PriorityQueue;
+
 class Server {
-    private static final int NO_CUSTOMER_ID = -1;
-
     private final int serverId;
-    private final int customerInQueue;
-    private final int customerServed;
-    private final double nextServeTime;
+    private final PriorityQueue<Customer> customerQueue;
+    private final int maxQueueLength;
+    private final double nextServiceTime;
 
-    Server(int serverId) {
+    Server(int serverId, int maxQueueLength) {
         this.serverId = serverId;
-        this.customerInQueue = NO_CUSTOMER_ID;
-        this.customerServed = NO_CUSTOMER_ID;
-        this.nextServeTime = 0;
+        this.maxQueueLength = maxQueueLength;
+        this.customerQueue = new PriorityQueue<Customer>(); 
+        this.nextServiceTime = 0;
     }
 
-    Server(int serverId, int customerInQueue, int customerServed, double nextServeTime) {
-        this.serverId = serverId;
-        this.customerInQueue = customerInQueue;
-        this.customerServed = customerServed;
-        this.nextServeTime = nextServeTime;
+    Server(Server server, PriorityQueue<Customer> queue, double nextServiceTime) {
+        this.serverId = server.getServerId();
+        this.customerQueue = queue;
+        this.maxQueueLength = server.getMaxQueueLength();
+        this.nextServiceTime = nextServiceTime;
     }
 
     int getServerId() {
         return this.serverId;
     }
 
-    Server serveCustomer(int customer, double nextServeTime) {
-        if (canServe(customer)) {
-            return new Server(this.serverId, NO_CUSTOMER_ID, customer, nextServeTime);
+    protected PriorityQueue<Customer> getCustomerQueue() {
+        return this.customerQueue;   
+    }
+
+    protected int getMaxQueueLength() {
+        return this.maxQueueLength;   
+    }
+
+    Server queueCustomer(Customer customer, double currTime) {
+        if (canQueue(customer)) {
+            double nextServiceTime = this.nextServiceTime;
+
+            if (currTime > nextServiceTime) {
+                nextServiceTime = currTime;
+            }
+
+            this.customerQueue.add(customer);
+            return new Server(this, this.customerQueue, 
+                    nextServiceTime + customer.getServiceTime());
         }
 
         return this;
     }
 
-    Server queueCustomer(int customer) {
-        if (canQueue()) {
-            return new Server(this.serverId, customer, this.customerServed, this.nextServeTime);
-        }
-
-        return this;
-    }
-
-    Server completeService(int customer) {
-        if (customer == this.customerServed) {
-            return new Server(this.serverId, this.customerInQueue, NO_CUSTOMER_ID, 0);
+    Server completeService(Customer customer) { 
+        if (customer == this.customerQueue.peek()) {
+            this.customerQueue.poll();
+            return new Server(this, this.customerQueue, this.nextServiceTime);
         } 
 
         return this;
     }
 
-    boolean canServe(int customer) {
-        return isIdle() || customer == this.customerInQueue;
+    boolean canServe(Customer customer) {
+        return this.customerQueue.size() == 0;
     }
 
-    boolean canQueue() {
-        return !hasQueue() && isServing();
+    boolean canQueue(Customer customer) {
+        return !isServing(customer) && this.customerQueue.size() < this.maxQueueLength + 1;
     }
 
-    boolean isIdle() {
-        return !isServing() && !hasQueue();
+    boolean isServing(Customer customer) {
+        return this.customerQueue.peek() == customer;
     }
 
-    boolean isServing() {
-        return this.customerServed != NO_CUSTOMER_ID;
-    }
-
-    boolean hasQueue() {
-        return this.customerInQueue != NO_CUSTOMER_ID;
-    }
-    
     double getNextServeTime() {
-        return this.nextServeTime;
+        return this.nextServiceTime;
     }
 
     @Override
