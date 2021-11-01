@@ -1,5 +1,7 @@
 package cs2030.simulator;
 
+import java.util.Optional;
+
 class ServeEvent extends CustomerAssignedEvent { 
     private static final int EVENT_PRIORITY = 2;
 
@@ -15,13 +17,11 @@ class ServeEvent extends CustomerAssignedEvent {
         return simulatorState.updateServer(server);
     }
 
-    @Override boolean hasNextEvent() {
-        return true;
-    }
-
     @Override
-    Event nextEvent(SimulatorState simulatorState) {
-        return new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServerAssigned());
+    Optional<Event> nextEvent(SimulatorState simulatorState) {
+        return Optional.<Event>of(
+                new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServerAssigned())
+                );
     }
 
     double getCompletionTime() {

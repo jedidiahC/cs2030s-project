@@ -1,10 +1,12 @@
 package cs2030.simulator;
 
+import java.util.Optional;
+
 class WaitEvent extends CustomerAssignedEvent { 
     WaitEvent(double time, Customer customer, int server) {
         super(time, customer, server);
     }
-    
+
     @Override
     SimulatorState process(SimulatorState simulatorState) {
         Server server = simulatorState
@@ -14,16 +16,16 @@ class WaitEvent extends CustomerAssignedEvent {
         return simulatorState.updateServer(server);
     }
 
-    @Override boolean hasNextEvent() {
-        return true;
-    }
-
     @Override 
-    Event nextEvent(SimulatorState simulatorState) {
+    Optional<Event> nextEvent(SimulatorState simulatorState) {
         Server server = simulatorState.getServer(this.getServerAssigned());
-        return new ServeEvent(server.getNextServeTime(), 
-                this.getCustomer(), 
-                this.getServerAssigned());
+
+        return Optional.<Event>of(
+                new ServeEvent(server.getNextServeTime(), 
+                    this.getCustomer(), 
+                    this.getServerAssigned()
+                    )
+                );
     }
 
     @Override

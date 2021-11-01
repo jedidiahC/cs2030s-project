@@ -2,6 +2,7 @@
 package cs2030.simulator;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 abstract class CustomerEvent extends Event { 
     private final Customer customer;
@@ -21,13 +22,8 @@ abstract class CustomerEvent extends Event {
     }
 
     @Override
-    Event nextEvent(SimulatorState state) {
-        return this;
-    }
-
-    @Override
-    boolean hasNextEvent() {
-        return false;
+    Optional<Event> nextEvent(SimulatorState state) {
+        return Optional.<Event>empty();
     }
 
     @Override

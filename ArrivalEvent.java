@@ -1,6 +1,7 @@
 package cs2030.simulator;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 class ArrivalEvent extends CustomerEvent { 
     private static final int EVENT_PRIORITY = 3;
@@ -10,29 +11,26 @@ class ArrivalEvent extends CustomerEvent {
     }
 
     @Override 
-    boolean hasNextEvent() {
-        return true;
+    Optional<Event> nextEvent(SimulatorState state) {
+        return Optional.<Event>of(pickNextEvent(state));
     }
 
-    @Override 
-    Event nextEvent(SimulatorState simulatorState) {
-        int serverId = simulatorState.assignServer(this.getCustomer());
+    Event pickNextEvent(SimulatorState state) {
+        int serverId = state.assignServer(this.getCustomer());
 
-        if (!simulatorState.hasServer(serverId)) {
+        if (!state.hasServer(serverId)) {
             return new LeaveEvent(this.getTime(), this.getCustomer());
         } 
 
-        Server server = simulatorState.getServer(serverId);  
+        Server server = state.getServer(serverId);  
 
         if (server.canServe(this.getCustomer())) {
             return new ServeEvent(this.getTime(), this.getCustomer(), serverId);
-        }
-
-        if (server.canQueue(this.getCustomer())) {
+        } else if (server.canQueue(this.getCustomer())) {
             return new WaitEvent(this.getTime(), this.getCustomer(), serverId);
-        } 
-
-        return new LeaveEvent(this.getTime(), this.getCustomer());
+        } else {
+            return new LeaveEvent(this.getTime(), this.getCustomer());
+        }
     }
 
     @Override

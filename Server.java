@@ -53,10 +53,14 @@ class Server {
     Server completeService(Customer customer) { 
         if (customer == this.customerQueue.peek()) {
             this.customerQueue.poll();
-            return new Server(this, this.customerQueue, this.nextServiceTime);
+            return new Server(this, this.customerQueue, this.nextServiceTime + getRestTime());
         } 
 
         return this;
+    }
+
+    double getRestTime() {
+        return 0.0f;
     }
 
     boolean canServe(Customer customer) {

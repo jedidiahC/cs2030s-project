@@ -1,5 +1,7 @@
 package cs2030.simulator;
 
+import java.util.Optional;
+
 abstract class Event { 
     private static final int DEFAULT_EVENT_PRIORITY = 1;
 
@@ -9,7 +11,7 @@ abstract class Event {
 
     abstract SimulatorState process(SimulatorState simulatorState);
     
-    abstract Event nextEvent(SimulatorState simulatorState);
+    abstract Optional<Event> nextEvent(SimulatorState simulatorState);
 
     public Event(double time) {
         this.time = time;
@@ -17,10 +19,6 @@ abstract class Event {
 
     double getTime() {
         return this.time;
-    }
-
-    boolean hasNextEvent() {
-        return true;
     }
 
     int getEventPriority() {
