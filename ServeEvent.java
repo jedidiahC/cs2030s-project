@@ -9,16 +9,17 @@ class ServeEvent extends CustomerAssignedEvent {
         super(time, customer, server);
     }
 
-    @Override SimulatorState process(SimulatorState simulatorState) {
-        Server server = simulatorState
+    @Override 
+    SimulatorState process(SimulatorState state) {
+        Server server = state
             .getServer(this.getServerAssigned())
             .queueCustomer(this.getCustomer(), this.getTime());
 
-        return simulatorState.updateServer(server);
+        return state.updateServer(server);
     }
 
     @Override
-    Optional<Event> nextEvent(SimulatorState simulatorState) {
+    Optional<Event> nextEvent(SimulatorState state) {
         return Optional.<Event>of(
                 new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServerAssigned())
                 );

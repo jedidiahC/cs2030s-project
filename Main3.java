@@ -1,8 +1,7 @@
-
-
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+
 import cs2030.simulator.Simulator;
 
 class Main3 {
@@ -22,7 +21,13 @@ class Main3 {
             serviceTimes.add(sc.nextDouble());
         }
 
+        List<Double> restTimes = new ArrayList<Double>();
+
+        for (int i = 0; i < numOfCustomers; i++) {
+            restTimes.add(sc.nextDouble());
+        }
+
         Simulator s = new Simulator();
-        s.simulate(arrivalTimes, serviceTimes, numOfServers, maxQueueLength);
+        s.simulate(arrivalTimes, serviceTimes, restTimes, numOfServers, maxQueueLength);
     }
 }

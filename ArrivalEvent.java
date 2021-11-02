@@ -16,7 +16,7 @@ class ArrivalEvent extends CustomerEvent {
     }
 
     Event pickNextEvent(SimulatorState state) {
-        int serverId = state.assignServer(this.getCustomer());
+        int serverId = state.assignServer(this.getTime(), this.getCustomer());
 
         if (!state.hasServer(serverId)) {
             return new LeaveEvent(this.getTime(), this.getCustomer());
@@ -24,9 +24,9 @@ class ArrivalEvent extends CustomerEvent {
 
         Server server = state.getServer(serverId);  
 
-        if (server.canServe(this.getCustomer())) {
+        if (server.canServe(this.getTime(), this.getCustomer())) {
             return new ServeEvent(this.getTime(), this.getCustomer(), serverId);
-        } else if (server.canQueue(this.getCustomer())) {
+        } else if (server.canQueue(this.getTime(),this.getCustomer())) {
             return new WaitEvent(this.getTime(), this.getCustomer(), serverId);
         } else {
             return new LeaveEvent(this.getTime(), this.getCustomer());

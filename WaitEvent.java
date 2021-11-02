@@ -8,20 +8,20 @@ class WaitEvent extends CustomerAssignedEvent {
     }
 
     @Override
-    SimulatorState process(SimulatorState simulatorState) {
-        Server server = simulatorState
+    SimulatorState process(SimulatorState state) {
+        Server server = state
             .getServer(this.getServerAssigned())
             .queueCustomer(this.getCustomer(), this.getTime()); 
 
-        return simulatorState.updateServer(server);
+        return state.updateServer(server);
     }
 
-    @Override 
-    Optional<Event> nextEvent(SimulatorState simulatorState) {
-        Server server = simulatorState.getServer(this.getServerAssigned());
-
+    @Override
+    Optional<Event> nextEvent(SimulatorState state) {
+        Server server = state.getServer(this.getServerAssigned());
         return Optional.<Event>of(
-                new ServeEvent(server.getNextServeTime(), 
+                new ShouldServeEvent(
+                    server.estimateServeTime(this.getCustomer()), 
                     this.getCustomer(), 
                     this.getServerAssigned()
                     )
@@ -31,7 +31,7 @@ class WaitEvent extends CustomerAssignedEvent {
     @Override
     SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
         Server server = state.getServer(this.getServerAssigned());
-        return stats.trackWaitingTime(server.getNextServeTime() - this.getTime());        
+        return stats.trackWaitingTime(server.estimateServeTime(this.getCustomer()) - this.getTime());        
     }
 
     @Override

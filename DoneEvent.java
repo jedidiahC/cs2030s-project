@@ -9,7 +9,7 @@ class DoneEvent extends CustomerAssignedEvent {
     SimulatorState process(SimulatorState simulatorState) {
         Server updatedServer = simulatorState
             .getServer(this.getServerAssigned())
-            .completeService(this.getCustomer());
+            .completeService(this.getTime(), this.getCustomer());
 
         return simulatorState.updateServer(updatedServer);
     }
