@@ -2,6 +2,7 @@
 package cs2030.simulator;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 class ShouldServeEvent extends CustomerAssignedEvent { 
     private static final int EVENT_PRIORITY = 2;
@@ -22,25 +23,22 @@ class ShouldServeEvent extends CustomerAssignedEvent {
     Event pickEvent(SimulatorState state) {
         Server server = this.retrieveServer(state);
 
-        if (server.isResting(this.getTime())) {
-            return new ShouldServeEvent(
-                    server.estimateServeTime(this.getCustomer()),
-                    this.getCustomer(),
-                    server
-                    );
-        } else {
-            return new ServeEvent(this.getTime(), this.getCustomer(), server);
-        }
-    }
+        Customer customer = this.getCustomer();
 
-    @Override
-    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
-        Server server = this.retrieveServer(state);
-        if (server.isResting(this.getTime())) {
-            return stats.trackWaitingTime(server.estimateServeTime(this.getCustomer()) - this.getTime());        
-        } else {
-            return stats;
-        }
+        BiFunction<Server, Double, Optional<Event>> getNextShouldServe = (s, time) -> {
+            return server.nextInQueue().map(c -> new ShouldServeEvent(time, c, s));
+        };
+
+        if (server.canServeNow(this.getTime(), customer)) {
+            return new ServeEvent(this.getTime(), customer, server, getNextShouldServe);
+        }             
+
+        // Extend waiting time if resting.
+        return new ShouldServeEvent(
+            server.estimateServeTime(customer),
+            customer,
+            server
+            );
     }
 
     @Override

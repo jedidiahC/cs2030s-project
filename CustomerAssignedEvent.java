@@ -1,5 +1,7 @@
 package cs2030.simulator;
 
+import java.util.Optional;
+
 class CustomerAssignedEvent extends CustomerEvent { 
     private final Server server;
 
@@ -14,5 +16,10 @@ class CustomerAssignedEvent extends CustomerEvent {
 
     protected Server getServer() {
         return this.server;
+    }
+
+    @Override
+    Optional<Event> nextEvent(SimulatorState state) {
+        return Optional.<Event>empty();
     }
 }

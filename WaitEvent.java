@@ -16,25 +16,6 @@ class WaitEvent extends CustomerAssignedEvent {
     }
 
     @Override
-    Optional<Event> nextEvent(SimulatorState state) {
-        Server server = this.retrieveServer(state);
-        double estimatedServeTime = server.estimateServeTime(this.getCustomer()); 
-        return Optional.<Event>of(
-                new ShouldServeEvent(
-                    estimatedServeTime, 
-                    this.getCustomer(), 
-                    server 
-                    )
-                );
-    }
-
-    @Override
-    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
-        Server server = this.retrieveServer(state);
-        return stats.trackWaitingTime(server.estimateServeTime(this.getCustomer()) - this.getTime());        
-    }
-
-    @Override
     public String toString() {
         return String.format("%s waits at %s", super.toString(), this.getServer());
     }

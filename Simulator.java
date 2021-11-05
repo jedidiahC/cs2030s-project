@@ -37,8 +37,7 @@ public class Simulator {
             List<Double> serviceTimes, 
             List<Double> restTimes,
             int numOfServers, 
-            int queueSize
-            ) {
+            int queueSize) {
         simulate(arrivalTimes, serviceTimes, restTimes, numOfServers, queueSize, 0);
     }
 
@@ -73,8 +72,8 @@ public class Simulator {
 
             event.nextEvent(state).ifPresent(eventPq::add);
 
-            stats = event.updateStats(state, stats);
             state = event.process(state);
+            stats = event.updateStats(state, stats);
         }
 
         System.out.println(stats);
@@ -96,8 +95,9 @@ public class Simulator {
         IntStream
             .range(0, numOfSelfCheckout)
             .forEach(i -> servers.add(
-                        SelfCheckout.createSelfCheckout(k + i + 1, sharedQueue, queueSize))
-                    );
+                    SelfCheckout.createSelfCheckout(k + i + 1, sharedQueue, queueSize)
+                )
+            );
     }
 
     void initEventPq(List<Double> arrivalTimes, 
