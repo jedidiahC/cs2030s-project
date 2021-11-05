@@ -33,6 +33,15 @@ public class Simulator {
         simulate(arrivalTimes, serviceTimes, new ArrayList<Double>(), numOfServers, queueSize);
     }
 
+    public void simulate(List<Double> arrivalTimes, 
+            List<Double> serviceTimes, 
+            List<Double> restTimes,
+            int numOfServers, 
+            int queueSize
+            ) {
+        simulate(arrivalTimes, serviceTimes, restTimes, numOfServers, queueSize, 0);
+    }
+
     /**
      * Simulates a multi-server system.
      */
@@ -40,9 +49,11 @@ public class Simulator {
             List<Double> serviceTimes, 
             List<Double> restTimes,
             int numOfServers, 
-            int queueSize) {
+            int queueSize,
+            int numOfSelfCheckout) {
 
         List<Server> servers = initServers(numOfServers, queueSize, restTimes);
+        initSelfCheckout(servers, numOfSelfCheckout, queueSize);
 
         PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
                 arrivalTimes.size(), 
@@ -75,8 +86,18 @@ public class Simulator {
 
         return IntStream
             .range(0, numOfServers)
-            .mapToObj(i -> new Server(i + 1, queueSize, restTimeQueue))
+            .mapToObj(i -> Server.createServer(i + 1, queueSize, restTimeQueue))
             .collect(Collectors.toList());
+    }
+
+    void initSelfCheckout(List<Server> servers, int numOfSelfCheckout, int queueSize) {
+        LinkedList<Customer> sharedQueue = new LinkedList<Customer>();
+        int k = servers.size();
+        IntStream
+            .range(0, numOfSelfCheckout)
+            .forEach(i -> servers.add(
+                        SelfCheckout.createSelfCheckout(k + i + 1, sharedQueue, queueSize))
+                    );
     }
 
     void initEventPq(List<Double> arrivalTimes, 

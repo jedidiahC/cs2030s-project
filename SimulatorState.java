@@ -25,7 +25,7 @@ class SimulatorState {
 
     // Return -1 if no idle server found.
     int assignServer(double time, Customer customer) {
-        return findServer(s -> s.canServe(time, customer))
+        return findServer(s -> s.canServeNow(time, customer))
             .or(() -> findServer(s -> s.canQueue(time, customer)))
             .map(s -> s.getServerId())
             .orElse(-1);

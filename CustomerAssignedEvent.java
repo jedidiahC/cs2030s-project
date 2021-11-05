@@ -1,14 +1,18 @@
 package cs2030.simulator;
 
 class CustomerAssignedEvent extends CustomerEvent { 
-    private final int serverAssigned;
+    private final Server server;
 
-    CustomerAssignedEvent(double time, Customer customer, int serverAssigned) {
+    CustomerAssignedEvent(double time, Customer customer, Server server) {
         super(time, customer);
-        this.serverAssigned = serverAssigned;
+        this.server = server;
     }
 
-    protected int getServerAssigned() {
-        return this.serverAssigned;
+    protected Server retrieveServer(SimulatorState state) {
+        return state.getServer(this.server.getServerId());
+    }
+
+    protected Server getServer() {
+        return this.server;
     }
 }

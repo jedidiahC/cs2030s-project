@@ -5,15 +5,14 @@ import java.util.Optional;
 class ServeEvent extends CustomerAssignedEvent { 
     private static final int EVENT_PRIORITY = 2;
 
-    ServeEvent(double time, Customer customer, int server) {
+    ServeEvent(double time, Customer customer, Server server) {
         super(time, customer, server);
     }
 
     @Override 
     SimulatorState process(SimulatorState state) {
-        Server server = state
-            .getServer(this.getServerAssigned())
-            .queueCustomer(this.getCustomer(), this.getTime());
+        Server server = this.retrieveServer(state)
+            .serveCustomer(this.getCustomer(), this.getTime());
 
         return state.updateServer(server);
     }
@@ -21,7 +20,7 @@ class ServeEvent extends CustomerAssignedEvent {
     @Override
     Optional<Event> nextEvent(SimulatorState state) {
         return Optional.<Event>of(
-                new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServerAssigned())
+                new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServer())
                 );
     }
 
@@ -31,7 +30,7 @@ class ServeEvent extends CustomerAssignedEvent {
 
     @Override
     public String toString() {
-        return String.format("%s serves by server %s", super.toString(), getServerAssigned());
+        return String.format("%s serves by %s", super.toString(), this.getServer());
     }
 
     @Override

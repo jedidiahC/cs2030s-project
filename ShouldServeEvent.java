@@ -6,7 +6,7 @@ import java.util.Optional;
 class ShouldServeEvent extends CustomerAssignedEvent { 
     private static final int EVENT_PRIORITY = 2;
 
-    ShouldServeEvent(double time, Customer customer, int server) {
+    ShouldServeEvent(double time, Customer customer, Server server) {
         super(time, customer, server);
     }
 
@@ -20,23 +20,22 @@ class ShouldServeEvent extends CustomerAssignedEvent {
     }
 
     Event pickEvent(SimulatorState state) {
-        Server server = state.getServer(this.getServerAssigned());
+        Server server = this.retrieveServer(state);
 
         if (server.isResting(this.getTime())) {
-            // Extend waiting time.
             return new ShouldServeEvent(
                     server.estimateServeTime(this.getCustomer()),
                     this.getCustomer(),
-                    server.getServerId()
+                    server
                     );
         } else {
-            return new ServeEvent(this.getTime(), this.getCustomer(), server.getServerId());
+            return new ServeEvent(this.getTime(), this.getCustomer(), server);
         }
     }
 
     @Override
     SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
-        Server server = state.getServer(this.getServerAssigned());
+        Server server = this.retrieveServer(state);
         if (server.isResting(this.getTime())) {
             return stats.trackWaitingTime(server.estimateServeTime(this.getCustomer()) - this.getTime());        
         } else {
