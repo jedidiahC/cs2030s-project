@@ -106,9 +106,11 @@ class Server {
     }
 
     boolean canServeNow(double time, Customer customer) {
-        return time >= this.nextServiceTime && 
-            customerServiced.isEmpty() &&
-            (this.customerQueue.size() == 0 || isNextInQueue(customer));
+        return customerServiced
+            .map(c -> false)
+            .orElse(
+                time >= this.nextServiceTime && 
+                (this.customerQueue.size() == 0 || isNextInQueue(customer)));
     }
 
     boolean canQueue(double time, Customer customer) {
