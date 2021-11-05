@@ -110,7 +110,7 @@ class Server {
             .map(c -> false)
             .orElse(
                 time >= this.nextServiceTime && 
-                (this.customerQueue.size() == 0 || isNextInQueue(customer)));
+                (getQueueSize() == 0 || isNextInQueue(customer)));
     }
 
     boolean canQueue(double time, Customer customer) {
@@ -118,7 +118,11 @@ class Server {
     }
 
     boolean isQueueFull() {
-        return this.customerQueue.size() >= this.maxQueueLength;
+        return getQueueSize() >= this.maxQueueLength;
+    }
+
+    int getQueueSize() {
+        return this.customerQueue.size();
     }
 
     boolean isServing(Customer customer) {

@@ -49,6 +49,46 @@ public class Simulator {
     /**
      * Simulates a multi-server system.
      */
+    public void simulate(List<Double> arrivalTimes, 
+            List<Double> serviceTimes, 
+            List<Double> restTimes,
+            int numOfServers, 
+            int queueSize,
+            int numOfSelfCheckout) {
+
+        List<Server> servers = initServers(numOfServers, queueSize, restTimes);
+        initSelfCheckout(servers, numOfSelfCheckout, queueSize);
+
+        PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
+            arrivalTimes.size(), 
+            new EventTimeComparator());
+
+        initEventPq(eventPq, arrivalTimes, 
+            i -> () -> serviceTimes.get(i),
+            () -> false);
+
+        SimulatorState state = new SimulatorState(servers);
+        SimulatorStats stats = new SimulatorStats();
+
+        while (!eventPq.isEmpty()) {
+            Event event = eventPq.poll();    
+
+            if (event.toString() != "") {
+                System.out.println(event);
+            }
+
+            event.nextEvent(state).ifPresent(eventPq::add);
+
+            state = event.process(state);
+            stats = event.updateStats(state, stats);
+        }
+
+        System.out.println(stats);
+    }
+
+    /**
+     * Simulates a multi-server system.
+     */
     public void simulateRandom(
         int seed,
         int numOfServers,
@@ -91,45 +131,9 @@ public class Simulator {
                 arrivalTimes.size(), 
                 new EventTimeComparator());
 
-        initEventPq(eventPq, arrivalTimes, i -> rg::genServiceTime);
-
-        SimulatorState state = new SimulatorState(servers);
-        SimulatorStats stats = new SimulatorStats();
-
-        while (!eventPq.isEmpty()) {
-            Event event = eventPq.poll();    
-
-            if (event.toString() != "") {
-                System.out.println(event);
-            }
-
-            event.nextEvent(state).ifPresent(eventPq::add);
-
-            state = event.process(state);
-            stats = event.updateStats(state, stats);
-        }
-
-        System.out.println(stats);
-    }
-
-    /**
-     * Simulates a multi-server system.
-     */
-    public void simulate(List<Double> arrivalTimes, 
-            List<Double> serviceTimes, 
-            List<Double> restTimes,
-            int numOfServers, 
-            int queueSize,
-            int numOfSelfCheckout) {
-
-        List<Server> servers = initServers(numOfServers, queueSize, restTimes);
-        initSelfCheckout(servers, numOfSelfCheckout, queueSize);
-
-        PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
-                arrivalTimes.size(), 
-                new EventTimeComparator());
-
-        initEventPq(eventPq, arrivalTimes, i -> () -> serviceTimes.get(i));
+        initEventPq(eventPq, arrivalTimes, 
+            i -> rg::genServiceTime,
+            () -> rg.genCustomerType() < greedyP);
 
         SimulatorState state = new SimulatorState(servers);
         SimulatorStats stats = new SimulatorStats();
@@ -172,12 +176,17 @@ public class Simulator {
     }
 
     void initEventPq(PriorityQueue<Event> eventPq, List<Double> arrivalTimes, 
-            Function<Integer, Supplier<Double>> getServiceTime
-            ) {
+            Function<Integer, Supplier<Double>> getServiceTime,
+            Supplier<Boolean> isGreedy
+    ) {
         IntStream.range(0, arrivalTimes.size())
             .forEach(i -> {
                 Double arrivalTime = arrivalTimes.get(i);
-                Customer customer = new Customer(i + 1, getServiceTime.apply(i), arrivalTime);
+                Customer customer = new Customer(
+                        i + 1, 
+                        getServiceTime.apply(i), 
+                        arrivalTime, 
+                        isGreedy.get());
                 eventPq.add(new ArrivalEvent(arrivalTime, customer)); 
             });
     }

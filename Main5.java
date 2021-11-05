@@ -21,7 +21,7 @@ class Main5 {
         double arrivalRate = sc.nextDouble();
         double serviceRate = sc.nextDouble();
         double restingRate = sc.nextDouble();
-        double restP= sc.nextDouble();
+        double restP = sc.nextDouble();
         double greedyP = sc.nextDouble();
 
         Simulator s = new Simulator();

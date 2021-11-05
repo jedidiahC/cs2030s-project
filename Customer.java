@@ -7,13 +7,15 @@ class Customer implements Comparable<Customer> {
     private final int customerId;
     private final Supplier<Double> serviceTime;
     private final double arrivalTime;
+    private final boolean isGreedy;
 
     private Optional<Double> serviceTimeCache;
 
-    Customer(int customerId, Supplier<Double> serviceTime, double arrivalTime) {
+    Customer(int customerId, Supplier<Double> serviceTime, double arrivalTime, boolean isGreedy) {
         this.customerId = customerId;
         this.serviceTime = serviceTime;
         this.arrivalTime = arrivalTime;
+        this.isGreedy = isGreedy;
 
         this.serviceTimeCache = Optional.<Double>empty();
     }
@@ -31,10 +33,14 @@ class Customer implements Comparable<Customer> {
     double getArrivalTime() {
         return this.arrivalTime;
     }
+    
+    boolean isGreedy() {
+        return this.isGreedy;
+    }
 
     @Override
     public String toString() {
-        return String.format("%d", this.customerId);
+        return String.format("%d%s", this.customerId, isGreedy ? "(greedy)" : "");
     }
 
     @Override
