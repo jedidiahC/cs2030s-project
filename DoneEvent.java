@@ -1,23 +1,32 @@
 package cs2030.simulator;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
+
 class DoneEvent extends CustomerAssignedEvent { 
-    DoneEvent(double time, Customer customer, int server) {
+    private final BiFunction<Server, Double, Optional<Event>> getNextShouldServe;
+
+    DoneEvent(double time, Customer customer, Server server, 
+           BiFunction<Server, Double, Optional<Event>> getNextShouldServe) {
         super(time, customer, server);
+        this.getNextShouldServe = getNextShouldServe;
     }
     
     @Override
-    SimulatorState process(SimulatorState simulatorState) {
-        Server updatedServer = simulatorState
-            .getServer(this.getServerAssigned())
-            .completeService(this.getTime(), this.getCustomer());
+    SimulatorState process(SimulatorState state) {
+        Server server = retrieveServer(state).completeService(this.getTime(), this.getCustomer());
+        return state.updateServer(server);
+    }
 
-        return simulatorState.updateServer(updatedServer);
+    @Override
+    Optional<Event> nextEvent(SimulatorState state) {
+        return getNextShouldServe.apply(retrieveServer(state), getTime());
     }
 
     @Override
     public String toString() {
-        return String.format("%s done serving by server %s", 
+        return String.format("%s done serving by %s", 
                 super.toString(), 
-                this.getServerAssigned());
+                this.getServer());
     }
 }

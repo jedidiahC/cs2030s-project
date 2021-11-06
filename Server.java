@@ -3,35 +3,42 @@ package cs2030.simulator;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.Optional;
 
 class Server {
     private final int serverId;
     private final Queue<Customer> customerQueue;
     private final int maxQueueLength;
     private final Queue<Double> restTimes;
+    private final Optional<Customer> customerServiced;
 
-    private final double endRestTime;
     private final double nextServiceTime;
 
-    Server(int serverId, int maxQueueLength, Queue<Double> restTimes) {
+    protected Server(int serverId, int maxQueueLength, 
+            Queue<Customer> customerQueue, Queue<Double> restTimes, 
+            Optional<Customer> customerServiced, 
+            double nextServiceTime) {
         this.serverId = serverId;
         this.maxQueueLength = maxQueueLength;
-        this.customerQueue = new LinkedList<Customer>(); 
+        this.customerQueue = customerQueue; 
         this.restTimes = restTimes;
-
-        this.endRestTime = 0;
-        this.nextServiceTime = 0;
+        this.customerServiced = customerServiced;
+        this.nextServiceTime = nextServiceTime;
     }
 
-    Server(Server server, Queue<Customer> queue, double nextServiceTime, double endRestTime) {
-        this.serverId = server.getServerId();
-        this.restTimes = server.restTimes;
+    static Server createServer(int serverId, int maxQueueLength, Queue<Double> restTimes) {
+        return new Server(serverId, maxQueueLength, new LinkedList<Customer>(), 
+                restTimes, Optional.<Customer>empty(), 0);
+    }
 
-        this.customerQueue = queue;
-        this.maxQueueLength = server.getMaxQueueLength();
-
-        this.nextServiceTime = nextServiceTime;
-        this.endRestTime = endRestTime;
+    protected Server update(
+            Queue<Customer> customerQueue,
+            Optional<Customer> customerServiced, 
+            double nextServiceTime) {
+        return new Server(serverId, maxQueueLength, 
+                customerQueue, restTimes, 
+                customerServiced, 
+                nextServiceTime); 
     }
 
     int getServerId() {
@@ -45,63 +52,81 @@ class Server {
     protected int getMaxQueueLength() {
         return this.maxQueueLength;   
     }
+    
+    protected Optional<Customer> getCustomerServiced() {
+        return this.customerServiced;
+    }
+
+    protected Queue<Double> getRestTimes() {
+        return this.restTimes;
+    }
+
+    protected double getNextServiceTime() {
+        return this.nextServiceTime;
+    }
 
     Server queueCustomer(Customer customer, double currTime) {
         if (canQueue(currTime, customer)) {
-            double nextServiceTime = this.nextServiceTime;
-
-            if (currTime > nextServiceTime) {
-                nextServiceTime = currTime;
-            }
-
             this.customerQueue.add(customer);
-            return new Server(this, 
-                    this.customerQueue, 
-                    nextServiceTime + customer.getServiceTime(),
-                    this.endRestTime
-                    );
+            return update(this.customerQueue, this.customerServiced, this.nextServiceTime);
         }
 
+        System.out.println("Unable to queue " + customer);
         return this;
     }
 
-    Server completeService(double currTime, Customer customer) { 
-        if (customer == this.customerQueue.peek()) {
+    Server serveCustomer(Customer customer, double currTime) {
+        if (isNextInQueue(customer)) {
             this.customerQueue.poll();
+        } 
 
-            double restDuration = rest();
-            double nextServiceTime = this.nextServiceTime + restDuration;
+        double nextServiceTime = calculateNextServiceTime(currTime, customer.getServiceTime());
 
-            double endRestTime = restDuration == 0 ? 
-                this.endRestTime : 
-                currTime + restDuration; 
+        return update(this.customerQueue, 
+                Optional.<Customer>of(customer), 
+                nextServiceTime
+                );
+    }
 
+    double calculateNextServiceTime(double currTime, double serveTime) {
+        return Math.max(currTime, this.nextServiceTime) + serveTime;
+    }
 
-            return new Server(this, this.customerQueue, nextServiceTime, endRestTime);
+    Server completeService(double currTime, Customer customer) { 
+        if (isServing(customer)) {
+            double nextServiceTime = this.nextServiceTime + rest();
+            return update(this.customerQueue, Optional.<Customer>empty(), nextServiceTime);
         } 
         
         return this;
     }
 
     double rest() {
-        double restDuration = this.restTimes.size() > 0 ? this.restTimes.poll() : 0;
-        return restDuration; 
+        return this.restTimes.size() > 0 ? this.restTimes.poll() : 0;
     }
 
-    boolean canServe(double time, Customer customer) {
-        return this.customerQueue.size() == 0 && !isResting(time);
+    boolean canServeNow(double time, Customer customer) {
+        return customerServiced
+            .map(c -> false)
+            .orElse(
+                time >= this.nextServiceTime && 
+                (getQueueSize() == 0 || isNextInQueue(customer)));
     }
 
     boolean canQueue(double time, Customer customer) {
-        return !(isInQueue(customer) || isServing(customer) || isQueueFull() || isResting(time));
+        return !(isInQueue(customer) || isQueueFull());
     }
 
     boolean isQueueFull() {
-        return this.customerQueue.size() >= this.maxQueueLength + 1;
+        return getQueueSize() >= this.maxQueueLength;
+    }
+
+    int getQueueSize() {
+        return this.customerQueue.size();
     }
 
     boolean isServing(Customer customer) {
-        return isNextInQueue(customer);
+        return this.customerServiced.map(c -> c == customer).orElse(false);
     }
 
     boolean isNextInQueue(Customer customer) {
@@ -112,27 +137,27 @@ class Server {
         return this.customerQueue.contains(c);
     }
 
+    Optional<Customer> nextInQueue() {
+        return Optional.<Customer>ofNullable(this.customerQueue.peek());
+    }
+
     double estimateServeTime(Customer customer) {
-        if (!isInQueue(customer)) {
-            return this.nextServiceTime;
-        } else {
-            double estimatedTime = this.endRestTime;
+        double estimatedTime = this.nextServiceTime;
+
+        if (isInQueue(customer)) {
             for (Customer c : this.customerQueue) {
                 if (c == customer) {
-                    return estimatedTime;
+                    break;
                 }
                 estimatedTime += c.getServiceTime();
             }
-            return estimatedTime;
-        }
-    }
+        } 
 
-    boolean isResting(double time) {
-        return time < this.endRestTime;
+        return estimatedTime;
     }
 
     @Override
     public String toString() {
-        return String.format("%d", getServerId());
+        return String.format("server %d", getServerId());
     }
 }

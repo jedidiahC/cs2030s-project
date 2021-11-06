@@ -23,11 +23,11 @@ class ArrivalEvent extends CustomerEvent {
         } 
 
         Server server = state.getServer(serverId);  
-
-        if (server.canServe(this.getTime(), this.getCustomer())) {
-            return new ServeEvent(this.getTime(), this.getCustomer(), serverId);
+        
+        if (server.canServeNow(this.getTime(), this.getCustomer())) {
+            return new ShouldServeEvent(this.getTime(), this.getCustomer(), server);
         } else if (server.canQueue(this.getTime(),this.getCustomer())) {
-            return new WaitEvent(this.getTime(), this.getCustomer(), serverId);
+            return new WaitEvent(this.getTime(), this.getCustomer(), server);
         } else {
             return new LeaveEvent(this.getTime(), this.getCustomer());
         }

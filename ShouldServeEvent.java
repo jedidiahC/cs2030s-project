@@ -2,11 +2,12 @@
 package cs2030.simulator;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 class ShouldServeEvent extends CustomerAssignedEvent { 
     private static final int EVENT_PRIORITY = 2;
 
-    ShouldServeEvent(double time, Customer customer, int server) {
+    ShouldServeEvent(double time, Customer customer, Server server) {
         super(time, customer, server);
     }
 
@@ -20,28 +21,24 @@ class ShouldServeEvent extends CustomerAssignedEvent {
     }
 
     Event pickEvent(SimulatorState state) {
-        Server server = state.getServer(this.getServerAssigned());
+        Server server = this.retrieveServer(state);
 
-        if (server.isResting(this.getTime())) {
-            // Extend waiting time.
-            return new ShouldServeEvent(
-                    server.estimateServeTime(this.getCustomer()),
-                    this.getCustomer(),
-                    server.getServerId()
-                    );
-        } else {
-            return new ServeEvent(this.getTime(), this.getCustomer(), server.getServerId());
-        }
-    }
+        Customer customer = this.getCustomer();
 
-    @Override
-    SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
-        Server server = state.getServer(this.getServerAssigned());
-        if (server.isResting(this.getTime())) {
-            return stats.trackWaitingTime(server.estimateServeTime(this.getCustomer()) - this.getTime());        
-        } else {
-            return stats;
-        }
+        BiFunction<Server, Double, Optional<Event>> getNextShouldServe = (s, time) -> {
+            return server.nextInQueue().map(c -> new ShouldServeEvent(time, c, s));
+        };
+
+        if (server.canServeNow(this.getTime(), customer)) {
+            return new ServeEvent(this.getTime(), customer, server, getNextShouldServe);
+        }             
+
+        // Extend waiting time if resting.
+        return new ShouldServeEvent(
+            server.estimateServeTime(customer),
+            customer,
+            server
+            );
     }
 
     @Override

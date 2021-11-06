@@ -1,19 +1,22 @@
 package cs2030.simulator;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 class ServeEvent extends CustomerAssignedEvent { 
     private static final int EVENT_PRIORITY = 2;
+    private final BiFunction<Server, Double, Optional<Event>> getNextShouldServe;
 
-    ServeEvent(double time, Customer customer, int server) {
+    ServeEvent(double time, Customer customer, Server server, 
+            BiFunction<Server, Double, Optional<Event>> getNextShouldServe) {
         super(time, customer, server);
+        this.getNextShouldServe = getNextShouldServe;
     }
 
     @Override 
     SimulatorState process(SimulatorState state) {
-        Server server = state
-            .getServer(this.getServerAssigned())
-            .queueCustomer(this.getCustomer(), this.getTime());
+        Server server = this.retrieveServer(state)
+            .serveCustomer(this.getCustomer(), this.getTime());
 
         return state.updateServer(server);
     }
@@ -21,7 +24,8 @@ class ServeEvent extends CustomerAssignedEvent {
     @Override
     Optional<Event> nextEvent(SimulatorState state) {
         return Optional.<Event>of(
-                new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServerAssigned())
+                new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServer(),
+                    this.getNextShouldServe)
                 );
     }
 
@@ -31,12 +35,14 @@ class ServeEvent extends CustomerAssignedEvent {
 
     @Override
     public String toString() {
-        return String.format("%s serves by server %s", super.toString(), getServerAssigned());
+        return String.format("%s serves by %s", super.toString(), this.getServer());
     }
 
     @Override
     SimulatorStats updateStats(SimulatorState state, SimulatorStats stats) {
-        return stats.trackCustomerServed();        
+        return stats
+            .trackWaitingTime(this.getTime() - this.getCustomer().getArrivalTime())
+            .trackCustomerServed();        
     }
 
     @Override
