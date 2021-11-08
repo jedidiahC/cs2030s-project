@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 class ServeEvent extends CustomerAssignedEvent { 
-    private static final int EVENT_PRIORITY = 2;
     private final BiFunction<Server, Double, Optional<Event>> getNextShouldServe;
 
     ServeEvent(double time, Customer customer, Server server, 
@@ -43,10 +42,5 @@ class ServeEvent extends CustomerAssignedEvent {
         return stats
             .trackWaitingTime(this.getTime() - this.getCustomer().getArrivalTime())
             .trackCustomerServed();        
-    }
-
-    @Override
-    int getEventPriority() {
-        return EVENT_PRIORITY;
     }
 }

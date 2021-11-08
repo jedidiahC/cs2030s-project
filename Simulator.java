@@ -26,7 +26,7 @@ public class Simulator {
     }
 
     /**
-     * Simulates a multi-server system.
+     * Simulates a multi-server system based on arrival times and number of servers.
      */
     public void simulate(List<Double> arrivalTimes, 
             List<Double> serviceTimes, 
@@ -36,7 +36,7 @@ public class Simulator {
     }
 
     /**
-     * Simulates a multi-server system.
+     * Simulates a multi-server system based on arrival times and number of servers.
      */
     public void simulate(List<Double> arrivalTimes, 
             List<Double> serviceTimes, 
@@ -47,7 +47,7 @@ public class Simulator {
     }
 
     /**
-     * Simulates a multi-server system.
+     * Simulates a multi-server system based on arrival times and number of servers.
      */
     public void simulate(List<Double> arrivalTimes, 
             List<Double> serviceTimes, 
@@ -57,49 +57,20 @@ public class Simulator {
             int numOfSelfCheckout) {
 
         List<Server> servers = initServers(numOfServers, queueSize, restTimes);
-        initSelfCheckout(servers, numOfSelfCheckout, queueSize);
+        addSelfCheckout(servers, numOfSelfCheckout, queueSize);
 
-        PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
-            arrivalTimes.size(), 
-            new EventTimeComparator());
-
-        initEventPq(eventPq, arrivalTimes, 
+        PriorityQueue<Event> eventPq = initEventPq(arrivalTimes, 
             i -> () -> serviceTimes.get(i),
             () -> false);
 
-        SimulatorState state = new SimulatorState(servers);
-        SimulatorStats stats = new SimulatorStats();
-
-        while (!eventPq.isEmpty()) {
-            Event event = eventPq.poll();    
-
-            if (event.toString() != "") {
-                System.out.println(event);
-            }
-
-            event.nextEvent(state).ifPresent(eventPq::add);
-
-            state = event.process(state);
-            stats = event.updateStats(state, stats);
-        }
-
-        System.out.println(stats);
+        startSimulatorLoop(eventPq, servers);
     }
 
-    /**
-     * Simulates a multi-server system.
-     */
-    public void simulateRandom(
-        int seed,
-        int numOfServers,
-        int maxQueueLength,
-        int numOfSelfCheckout,
-        int numOfCustomers,
-        double arrivalRate,
-        double serviceRate,
-        double restingRate,
-        double restP,
-        double greedyP) {
+    public void simulate(int seed, int numOfServers,
+        int maxQueueLength, int numOfSelfCheckout,
+        int numOfCustomers, double arrivalRate,
+        double serviceRate, double restingRate,
+        double restP, double greedyP) {
 
         RandomGenerator rg = new RandomGenerator(
                 seed,
@@ -125,16 +96,57 @@ public class Simulator {
         }
 
         List<Server> servers = initServers(numOfServers, maxQueueLength, restTimes);
-        initSelfCheckout(servers, numOfSelfCheckout, maxQueueLength);
+        addSelfCheckout(servers, numOfSelfCheckout, maxQueueLength);
 
+        PriorityQueue<Event> eventPq = initEventPq(arrivalTimes, 
+            i -> rg::genServiceTime,
+            () -> rg.genCustomerType() < greedyP);
+
+        startSimulatorLoop(eventPq, servers);
+    }
+
+    List<Server> initServers(int numOfServers, int queueSize, List<Double> restTimes) {
+        LinkedList<Double> restTimeQueue = new LinkedList<Double>();
+        restTimeQueue.addAll(restTimes);
+
+        return IntStream
+            .range(0, numOfServers)
+            .mapToObj(i -> Server.createServer(i + 1, queueSize, restTimeQueue))
+            .collect(Collectors.toList());
+    }
+
+    void addSelfCheckout(List<Server> servers, int numOfSelfCheckout, int queueSize) {
+        LinkedList<Customer> sharedQueue = new LinkedList<Customer>();
+        int k = servers.size();
+        IntStream
+            .range(0, numOfSelfCheckout)
+            .forEach(i -> servers.add(
+                    SelfCheckout.createSelfCheckout(k + i + 1, sharedQueue, queueSize)
+                )
+            );
+    }
+
+    PriorityQueue<Event> initEventPq(List<Double> arrivalTimes, Function<Integer, 
+            Supplier<Double>> getServiceTime, Supplier<Boolean> isGreedy) {
         PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
                 arrivalTimes.size(), 
                 new EventTimeComparator());
 
-        initEventPq(eventPq, arrivalTimes, 
-            i -> rg::genServiceTime,
-            () -> rg.genCustomerType() < greedyP);
+        IntStream.range(0, arrivalTimes.size())
+            .mapToObj(i -> 
+                new Customer(
+                    i + 1, 
+                    getServiceTime.apply(i), 
+                    arrivalTimes.get(i), 
+                    isGreedy.get())
+            )
+            .map(c -> new ArrivalEvent(c.getArrivalTime(), c))
+            .forEach(eventPq::add);
 
+        return eventPq;
+    }
+
+    void startSimulatorLoop(PriorityQueue<Event> eventPq, List<Server> servers) {
         SimulatorState state = new SimulatorState(servers);
         SimulatorStats stats = new SimulatorStats();
 
@@ -152,42 +164,5 @@ public class Simulator {
         }
 
         System.out.println(stats);
-    }
-
-    List<Server> initServers(int numOfServers, int queueSize, List<Double> restTimes) {
-        LinkedList<Double> restTimeQueue = new LinkedList<Double>();
-        restTimeQueue.addAll(restTimes);
-
-        return IntStream
-            .range(0, numOfServers)
-            .mapToObj(i -> Server.createServer(i + 1, queueSize, restTimeQueue))
-            .collect(Collectors.toList());
-    }
-
-    void initSelfCheckout(List<Server> servers, int numOfSelfCheckout, int queueSize) {
-        LinkedList<Customer> sharedQueue = new LinkedList<Customer>();
-        int k = servers.size();
-        IntStream
-            .range(0, numOfSelfCheckout)
-            .forEach(i -> servers.add(
-                    SelfCheckout.createSelfCheckout(k + i + 1, sharedQueue, queueSize)
-                )
-            );
-    }
-
-    void initEventPq(PriorityQueue<Event> eventPq, List<Double> arrivalTimes, 
-            Function<Integer, Supplier<Double>> getServiceTime,
-            Supplier<Boolean> isGreedy
-    ) {
-        IntStream.range(0, arrivalTimes.size())
-            .forEach(i -> {
-                Double arrivalTime = arrivalTimes.get(i);
-                Customer customer = new Customer(
-                        i + 1, 
-                        getServiceTime.apply(i), 
-                        arrivalTime, 
-                        isGreedy.get());
-                eventPq.add(new ArrivalEvent(arrivalTime, customer)); 
-            });
     }
 }

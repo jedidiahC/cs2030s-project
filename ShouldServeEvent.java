@@ -5,8 +5,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 class ShouldServeEvent extends CustomerAssignedEvent { 
-    private static final int EVENT_PRIORITY = 2;
-
     ShouldServeEvent(double time, Customer customer, Server server) {
         super(time, customer, server);
     }
@@ -44,10 +42,5 @@ class ShouldServeEvent extends CustomerAssignedEvent {
     @Override
     public String toString() {
         return "";
-    }
-
-    @Override
-    int getEventPriority() {
-        return EVENT_PRIORITY;
     }
 }

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 class ArrivalEvent extends CustomerEvent { 
-    private static final int EVENT_PRIORITY = 3;
-
     ArrivalEvent(double time, Customer customer) {
         super(time, customer);
     }
@@ -36,11 +34,6 @@ class ArrivalEvent extends CustomerEvent {
     @Override
     public String toString() {
         return String.format("%s arrives", super.toString());
-    }
-
-    @Override
-    int getEventPriority() {
-        return EVENT_PRIORITY;
     }
 }
 

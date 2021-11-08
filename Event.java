@@ -3,7 +3,7 @@ package cs2030.simulator;
 import java.util.Optional;
 
 abstract class Event { 
-    private static final int DEFAULT_EVENT_PRIORITY = 1;
+    private static final int DEFAULT_EVENT_PRIORITY = 100;
 
     private final double time;
 

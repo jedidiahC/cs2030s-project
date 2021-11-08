@@ -27,6 +27,11 @@ abstract class CustomerEvent extends Event {
     }
 
     @Override
+    int getEventPriority() {
+        return this.customer.getCustomerId();
+    } 
+
+    @Override
     public String toString() {
         return String.format("%.3f %s", getTime(), customer);
     }

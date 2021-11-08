@@ -25,7 +25,7 @@ class Main5 {
         double greedyP = sc.nextDouble();
 
         Simulator s = new Simulator();
-        s.simulateRandom(seed, numOfServers, maxQueueLength, numOfSelfCheckout,
+        s.simulate(seed, numOfServers, maxQueueLength, numOfSelfCheckout,
             numOfCustomers, arrivalRate, serviceRate, restingRate, restP, greedyP);
     }
 }
