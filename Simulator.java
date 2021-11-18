@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.function.Supplier;
 import java.util.function.Function;
+import java.util.function.IntToDoubleFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,8 @@ public class Simulator {
     }
 
     /**
-     * Simulates a multi-server system based on arrival times and number of servers.
+     * Simulates a multi-server system based on arrival times, service times, 
+     * number of servers and queue size.
      */
     public void simulate(List<Double> arrivalTimes, 
             List<Double> serviceTimes, 
@@ -36,7 +38,8 @@ public class Simulator {
     }
 
     /**
-     * Simulates a multi-server system based on arrival times and number of servers.
+     * Simulates a multi-server system based on arrival times, service times, 
+     * rest times, number of servers and queue size.
      */
     public void simulate(List<Double> arrivalTimes, 
             List<Double> serviceTimes, 
@@ -47,7 +50,8 @@ public class Simulator {
     }
 
     /**
-     * Simulates a multi-server system based on arrival times and number of servers.
+     * Simulates a multi-server system based on arrival times, service times, 
+     * rest times, number of servers, queue size and number of self checkout counters.
      */
     public void simulate(List<Double> arrivalTimes, 
             List<Double> serviceTimes, 
@@ -66,6 +70,9 @@ public class Simulator {
         startSimulatorLoop(eventPq, servers);
     }
 
+    /**
+     * Simulates a multi-server system using pseudo-random arrival times.
+     */
     public void simulate(int seed, int numOfServers,
         int maxQueueLength, int numOfSelfCheckout,
         int numOfCustomers, double arrivalRate,
@@ -79,21 +86,16 @@ public class Simulator {
                 restingRate
             );
 
-        List<Double> arrivalTimes = new ArrayList<Double>();
-        double arrivalTime = 0;
-
-        for (int i = 0; i < numOfCustomers; i++) {
-            arrivalTime += i == 0 ? 0 : rg.genInterArrivalTime();
-            arrivalTimes.add(arrivalTime);
-        }
+        List<Double> arrivalTimes = initArrivalTimes(numOfCustomers,
+            i -> i == 0 ? 0 : rg.genInterArrivalTime()
+        );
 
         List<Double> restTimes = new ArrayList<Double>();
-
-        for (int i = 0; i < numOfCustomers; i++) {
-            restTimes.add(rg.genRandomRest() < restP ?
-                    rg.genRestPeriod() :
-                    0);
-        }
+        IntStream.range(0, numOfCustomers)
+            .mapToDouble(i -> rg.genRandomRest() < restP ?
+                rg.genRestPeriod() :
+                0)
+            .forEach(restTimes::add);
 
         List<Server> servers = initServers(numOfServers, maxQueueLength, restTimes);
         addSelfCheckout(servers, numOfSelfCheckout, maxQueueLength);
@@ -105,7 +107,20 @@ public class Simulator {
         startSimulatorLoop(eventPq, servers);
     }
 
-    List<Server> initServers(int numOfServers, int queueSize, List<Double> restTimes) {
+    private List<Double> initArrivalTimes(int numOfCustomers, IntToDoubleFunction generator) {
+        List<Double> arrivalTimes = new ArrayList<Double>();
+        double arrivalTime = 0;
+        IntStream.range(0, numOfCustomers)
+            .mapToDouble(generator)
+            .reduce(arrivalTime, (currTime, delta) -> { 
+                double newArrivalTime = currTime + delta;
+                arrivalTimes.add(newArrivalTime);
+                return newArrivalTime;
+            });
+        return arrivalTimes;
+    }
+
+    private List<Server> initServers(int numOfServers, int queueSize, List<Double> restTimes) {
         LinkedList<Double> restTimeQueue = new LinkedList<Double>();
         restTimeQueue.addAll(restTimes);
 
@@ -115,7 +130,7 @@ public class Simulator {
             .collect(Collectors.toList());
     }
 
-    void addSelfCheckout(List<Server> servers, int numOfSelfCheckout, int queueSize) {
+    private void addSelfCheckout(List<Server> servers, int numOfSelfCheckout, int queueSize) {
         LinkedList<Customer> sharedQueue = new LinkedList<Customer>();
         int k = servers.size();
         IntStream
@@ -126,7 +141,7 @@ public class Simulator {
             );
     }
 
-    PriorityQueue<Event> initEventPq(List<Double> arrivalTimes, Function<Integer, 
+    private PriorityQueue<Event> initEventPq(List<Double> arrivalTimes, Function<Integer, 
             Supplier<Double>> getServiceTime, Supplier<Boolean> isGreedy) {
         PriorityQueue<Event> eventPq = new PriorityQueue<Event>(
                 arrivalTimes.size(), 
@@ -134,11 +149,7 @@ public class Simulator {
 
         IntStream.range(0, arrivalTimes.size())
             .mapToObj(i -> 
-                new Customer(
-                    i + 1, 
-                    getServiceTime.apply(i), 
-                    arrivalTimes.get(i), 
-                    isGreedy.get())
+                new Customer(i + 1, getServiceTime.apply(i), arrivalTimes.get(i), isGreedy.get())
             )
             .map(c -> new ArrivalEvent(c.getArrivalTime(), c))
             .forEach(eventPq::add);
@@ -146,7 +157,7 @@ public class Simulator {
         return eventPq;
     }
 
-    void startSimulatorLoop(PriorityQueue<Event> eventPq, List<Server> servers) {
+    private void startSimulatorLoop(PriorityQueue<Event> eventPq, List<Server> servers) {
         SimulatorState state = new SimulatorState(servers);
         SimulatorStats stats = new SimulatorStats();
 
