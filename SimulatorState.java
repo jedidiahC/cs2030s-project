@@ -13,21 +13,23 @@ import java.util.function.Supplier;
 class SimulatorState {
     private final HashMap<Integer, Server> servers;
 
-    SimulatorState(List<Server> servers) {
-        this.servers = new HashMap<Integer, Server>();
-
-        for (Server server: servers) {
-            this.servers.put(server.getServerId(), server);
-        }
+    SimulatorState(Collection<Server> servers) {
+        this.servers = initHashMap(servers);
     }
 
     SimulatorState(HashMap<Integer, Server> servers) {
         this.servers = servers;
     }
 
+    private HashMap<Integer, Server> initHashMap(Collection<Server> servers) {
+        HashMap<Integer, Server> hashMap = new HashMap<Integer, Server>();
+        servers.stream().forEach(s -> hashMap.put(s.getServerId(), s));
+        return hashMap;
+    }
+
     // Return -1 if no idle server found.
     int assignServer(double time, Customer customer) {
-        return getStream()
+        return serverStream()
             .sorted(new ServerComparator(customer, time))
         .findFirst()
             .map(s -> s.getServerId())
@@ -35,16 +37,18 @@ class SimulatorState {
     }
 
     Optional<Server> findServer(Predicate<Server> pred) {
-        return getStream().filter(pred).findFirst();
-    }
-
-    Stream<Server> getStream() {
-        return servers.values().stream();
+        return serverStream().filter(pred).findFirst();
     }
 
     SimulatorState updateServer(Server server) {
-        servers.put(server.getServerId(), server);
-        return this;
+        HashMap<Integer, Server> newHashMap = new HashMap<Integer, Server>();
+        newHashMap.putAll(this.servers);
+        newHashMap.put(server.getServerId(), server);
+        return new SimulatorState(newHashMap);
+    }
+
+    private Stream<Server> serverStream() {
+        return servers.values().stream();
     }
 
     boolean hasServer(int serverId) {

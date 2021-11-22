@@ -1,15 +1,11 @@
 package cs2030.simulator;
 
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 class ServeEvent extends CustomerAssignedEvent { 
-    private final BiFunction<Server, Double, Optional<Event>> getNextShouldServe;
-
-    ServeEvent(double time, Customer customer, Server server, 
-            BiFunction<Server, Double, Optional<Event>> getNextShouldServe) {
+    ServeEvent(double time, Customer customer, Server server) {
         super(time, customer, server);
-        this.getNextShouldServe = getNextShouldServe;
     }
 
     @Override 
@@ -22,9 +18,13 @@ class ServeEvent extends CustomerAssignedEvent {
 
     @Override
     Optional<Event> nextEvent(SimulatorState state) {
+        Function<Server, Optional<Event>> scheduleNextCustomer = s -> {
+            return s.nextInQueue().map(c -> new ServeEvent(s.estimateServeTime(c), c, s));
+        };
+
         return Optional.<Event>of(
                 new DoneEvent(getCompletionTime(), this.getCustomer(), this.getServer(),
-                    this.getNextShouldServe)
+                    scheduleNextCustomer)
                 );
     }
 

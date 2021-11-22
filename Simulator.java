@@ -168,9 +168,9 @@ public class Simulator {
                 System.out.println(event);
             }
 
+            state = event.process(state);
             event.nextEvent(state).ifPresent(eventPq::add);
 
-            state = event.process(state);
             stats = event.updateStats(state, stats);
         }
 

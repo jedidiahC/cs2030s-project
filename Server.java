@@ -31,8 +31,7 @@ class Server {
                 restTimes, Optional.<Customer>empty(), 0);
     }
 
-    protected Server update(
-            Queue<Customer> customerQueue,
+    protected Server update(Queue<Customer> customerQueue,
             Optional<Customer> customerServiced, 
             double nextServiceTime) {
         return new Server(serverId, maxQueueLength, 
@@ -81,27 +80,23 @@ class Server {
         } 
 
         double nextServiceTime = calculateNextServiceTime(currTime, customer.getServiceTime());
-
-        return update(this.customerQueue, 
-                Optional.<Customer>of(customer), 
-                nextServiceTime
-                );
+        return update(this.customerQueue, Optional.<Customer>of(customer), nextServiceTime);
     }
 
-    double calculateNextServiceTime(double currTime, double serveTime) {
+    private double calculateNextServiceTime(double currTime, double serveTime) {
         return Math.max(currTime, this.nextServiceTime) + serveTime;
     }
 
     Server completeService(double currTime, Customer customer) { 
         if (isServing(customer)) {
-            double nextServiceTime = this.nextServiceTime + rest();
+            double nextServiceTime = this.nextServiceTime + nextRestTime();
             return update(this.customerQueue, Optional.<Customer>empty(), nextServiceTime);
         } 
         
         return this;
     }
 
-    double rest() {
+    private double nextRestTime() {
         return this.restTimes.size() > 0 ? this.restTimes.poll() : 0;
     }
 
@@ -110,7 +105,8 @@ class Server {
             .map(c -> false)
             .orElse(
                 time >= this.nextServiceTime && 
-                (getQueueSize() == 0 || isNextInQueue(customer)));
+                (getQueueSize() == 0 || isNextInQueue(customer))
+            );
     }
 
     boolean canQueue(double time, Customer customer) {
@@ -147,7 +143,7 @@ class Server {
         if (isInQueue(customer)) {
             for (Customer c : this.customerQueue) {
                 if (c == customer) {
-                    break;
+                    break; 
                 }
                 estimatedTime += c.getServiceTime();
             }
